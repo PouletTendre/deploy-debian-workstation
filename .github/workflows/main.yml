@@ -1,1 +1,20 @@
+name: Deploy a debian workstation with cloud-init
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v4
+
+      - name: Test Connexion
+        run: |
+          ansible-playbook playbooks/ping.yml 
+
+      - name: Création d'une machine Debian (avec cloud-init)
+        run: |
+          ansible-playbook playbooks/create-debian.yml

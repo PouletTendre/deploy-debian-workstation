@@ -1,0 +1,49 @@
+---
+- name: "Cloner le template Debian et configurer Cloud-Init"
+  community.proxmox.proxmox_kvm:
+    # Authentification (héritée des vars)
+    api_host: "{{ pve_api_host }}"
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
+    node: "{{ pve_node }}"
+    validate_certs: no
+
+    # Paramètres de clonage
+    clone: "{{ template_name }}"  # Le nom de ton template source
+    name: "{{ vm_name }}"         # Le nom de la nouvelle VM
+    newid: "{{ vm_id | default(omit) }}" # ID optionnel (Proxmox peut choisir)
+    full: yes                     # Full clone (plus lent mais indépendant) ou no (linked clone)
+    format: qcow2
+    storage: local-lvm            # Adapter selon ton stockage (ex: ceph, local-zfs)
+
+    # Configuration Cloud-Init
+    ciuser: "{{ ci_user | default('debian') }}"
+    cipassword: "{{ ci_password | default(omit) }}"
+    sshkeys: "{{ ci_ssh_public_key }}"
+    
+    # Configuration Réseau (Cloud-init)
+    # Format: ip=<ip>/<cidr>,gw=<gateway>
+    # Pour dhcp: "ip=dhcp"
+    ipconfig0: "ip={{ vm_ip }}/24,gw={{ vm_gateway }}"
+    nameservers: "{{ vm_dns | default('1.1.1.1') }}"
+    
+    # Ressources
+    cores: "{{ vm_cores | default(2) }}"
+    memory: "{{ vm_memory | default(2048) }}"
+    
+    # État final
+    state: present
+    
+  register: vm_creation
+
+- name: "Démarrer la VM si elle vient d'être créée ou modifiée"
+  community.proxmox.proxmox_kvm:
+    api_host: "{{ pve_api_host }}"
+    api_user: "{{ pve_api_user }}"
+    api_token_id: "{{ pve_api_token_id }}"
+    api_token_secret: "{{ pve_api_token_secret }}"
+    node: "{{ pve_node }}"
+    name: "{{ vm_name }}"
+    state: started
+  when: vm_creation.changed

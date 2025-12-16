@@ -1,0 +1,28 @@
+---
+- name: Déployer des VMs Debian depuis Cloud-Init
+  hosts: localhost
+  gather_facts: no
+  vars: # Variables de github secrets a modif plus tard
+    pve_api_host: ${{ secrets[env.SECRET_VAULT_NAME] }}
+    pve_api_user: ${{ secrets[env.SECRET_VAULT_NAME] }}
+    pve_api_token_id: ${{ secrets[env.SECRET_VAULT_NAME] }}
+    pve_api_token_secret: ${{ secrets[env.SECRET_VAULT_NAME] }}
+    pve_node: ${{ secrets[env.SECRET_VAULT_NAME] }}
+    
+    # --- Configuration Globale ---
+    template_name: "debian-cloudinit" 
+    ci_ssh_public_key: ${{ secrets[env.SECRET_VAULT_NAME] }} # Clé SSH publique pour Cloud-Init a modif plus tard
+    vm_gateway: ${{ secrets[env.SECRET_VAULT_NAME] }}
+
+  tasks:
+    - name: "Créer une VM Debian depuis le template"
+      include_role:
+        name: pve_clone_template
+      vars:
+        vm_id: # faire en sorte que chaque vm ait un id unique
+        vm_name: "VM-NAME"
+        vm_ip: "X.X.X.X/24"
+        vm_cores: 2
+        vm_memory: 2048
+        vm_username: "debianuser"
+        vm_password: "pass"

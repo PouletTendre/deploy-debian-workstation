@@ -1,0 +1,6 @@
+---
+- name: Test de Connexion
+  hosts: all
+  tasks:
+    - name: Le fameux Ping-Pong
+      ping:
